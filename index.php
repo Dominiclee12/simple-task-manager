@@ -1,56 +1,107 @@
-<?php
-session_start();
-require "db.php";
-
-// if not login, redirecting to login page
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login_form.php");
-    exit();
-}
-
-$user_id = $_SESSION['user_id'];
-
-// Query user's tasks
-// 1. prepare sql statement and bind value
-$stmt = $conn->prepare("SELECT id, title, status FROM tasks WHERE user_id=? ORDER BY created_at DESC");
-$stmt->bind_param("i", $user_id);
-// 2. execute
-$stmt->execute();
-// 3. get result
-$result = $stmt->get_result();
-
-?>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="./bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <title>Simple Task Manager</title>
 </head>
 
 <body>
     <div class="container">
-        <h2>Welcome, <?php echo $_SESSION['email']; ?>!</h2>
-        <p>This is the homepage</p>
+        <h2>Simple Task Manager (API)</h2>
         <a href="logout.php">Logout</a>
 
         <h3>Add new task</h3>
-        <form method="POST" action="task_create.php">
-            <input type="text" name="title" required />
-            <button type="submit">Add</button>
-        </form>
+        <input type="text" id="title" placeholder="study php" required />
+        <button type="button" onclick="AddTask()">Add</button>
 
         <h3>My tasks</h3>
-        <ul>
-            <?php while ($row = $result->fetch_assoc()): ?>
-                <li><?php echo $row['title']; ?> | <?php echo $row['status']; ?> | <a href="task_update.php?id=<?php echo $row['id']; ?>">Done</a> <a href="task_delete.php?id=<?php echo $row['id']; ?>">Delete</a></li>
-            <?php endwhile; ?>
-        </ul>
+        <ul id="task-list"></ul>
     </div>
 
     <script src="./bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // load tasks
+        // json - decode, stringify - encode
+        async function loadTasks() {
+            let res = await fetch("api.php");
+            let data = await res.json();
+
+            if (data.success) {
+                let list = document.getElementById("task-list");
+                list.innerHTML = "";
+                data.tasks.forEach(task => {
+                    let li = document.createElement("li");
+                    li.innerHTML = `
+                        <b>${task.title}</b> |
+                        ${task.status} |
+                        <button onclick="UpdateTask(${task.id}, 'done')">done</button> |
+                        <button onclick="DeleteTask(${task.id})">delete</button>
+                    `;
+                    list.appendChild(li);
+                });
+            }
+        }
+
+        // add task
+        async function AddTask() {
+            let title = document.getElementById("title").value;
+
+            let res = await fetch("api.php", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    title
+                })
+            })
+            let data = await res.json();
+
+            if (data.success) {
+                document.getElementById("title").value = "";   
+            }
+
+            alert(data.message);
+            loadTasks();
+        }
+
+        // update task
+        async function UpdateTask(id, status) {
+            let res = await fetch("api.php", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    id,
+                    status
+                })
+            });
+            let data = await res.json();
+            alert(data.message);
+            loadTasks();
+        }
+
+        // delete task
+        async function DeleteTask(id) {
+            let res = await fetch("api.php", {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    id
+                })
+            });
+            let data = await res.json();
+            alert(data.message);
+            loadTasks();
+        }
+
+        // load data on initial page load
+        loadTasks();
+    </script>
 </body>
 
 </html>
