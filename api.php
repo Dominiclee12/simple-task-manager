@@ -3,6 +3,7 @@ session_start();
 header("Content-Type: application/json");
 require 'db.php';
 
+// validate user logged in
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(["success" => false, "message" => "Not logged in"]);
     exit();
@@ -21,14 +22,14 @@ switch ($method) {
         $tasks = $result->fetch_all(MYSQLI_ASSOC);
         echo json_encode(["success" => true, "tasks" => $tasks]);
         break;
-        
-    // create a new task
+
+    // create task
     case "POST":
         // read raw HTTP request body and decode them into associative array for PHP
         $data = json_decode(file_get_contents("php://input"), true);
         $title = $data['title'];
 
-        if(empty($title)) {
+        if (empty($title)) {
             echo json_encode(["success" => false, "message" => "title is required"]);
             exit();
         }
@@ -38,8 +39,8 @@ switch ($method) {
         $stmt->execute();
         echo json_encode(["success" => true, "message" => "Task added"]);
         break;
-        
-    // update a task
+
+    // update task
     case "PUT":
         $data = json_decode(file_get_contents("php://input"), true);
         $task_id = $data['id'] ?? 0;
@@ -51,7 +52,7 @@ switch ($method) {
         echo json_encode(["success" => true, "message" => "Task updated"]);
         break;
 
-    // delete a task
+    // delete task
     case "DELETE":
         $data = json_decode(file_get_contents("php://input"), true);
         $task_id = $data['id'] ?? 0;

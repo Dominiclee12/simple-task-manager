@@ -22,9 +22,9 @@
     <script src="./bootstrap/js/bootstrap.bundle.min.js"></script>
     <script>
         // load tasks
-        // json - decode, stringify - encode
         async function loadTasks() {
             let res = await fetch("api.php");
+            // json() - decode, stringify() - encode
             let data = await res.json();
 
             if (data.success) {
@@ -59,7 +59,7 @@
             let data = await res.json();
 
             if (data.success) {
-                document.getElementById("title").value = "";   
+                document.getElementById("title").value = "";
             }
 
             alert(data.message);
@@ -99,7 +99,7 @@
             loadTasks();
         }
 
-        // load data on initial page load
+        // on initial load for tasks list
         loadTasks();
     </script>
 </body>
