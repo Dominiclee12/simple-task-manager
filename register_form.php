@@ -8,17 +8,33 @@
 <body>
     <h1>Register</h1>
 
-    <form method="POST" action="register.php">
-        <label>Email address</label>
-        <input type="email" name="email" placeholder="name@example.com" required /><br>
+    <label>Email address</label>
+    <input type="email" id="email" placeholder="name@example.com" /><br>
 
-        <label>Password</label>
-        <input type="password" name="password" placeholder="Password" required /><br>
+    <label>Password</label>
+    <input type="password" id="password" placeholder="password" /><br>
 
-        <button type="submit">Register</button>
-    </form>
+    <button onclick="register()">Register</button>
 
     <p>Already have an account? <a href="login_form.php">Login</a></p>
+
+    <script>
+        async function register() {
+            let email = document.getElementById("email").value;
+            let password = document.getElementById("password").value;
+            let action = "register";
+
+            let res = await fetch("api/auth.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action, email, password })
+            });
+            let data = await res.json();
+
+            console.log("message", data.message);
+            alert(data.message);
+        }
+    </script>
 </body>
 
 </html>

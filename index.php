@@ -1,108 +1,78 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login_form.php");
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <title>Simple Task Manager</title>
+    <title>Task Manager</title>
+    <script src="assets/js/script.js"></script>
 </head>
 
 <body>
-        <h2>Simple Task Manager</h2>
-        <a href="logout.php">Logout</a><br><br>
+    <h2>Task Manager</h2>
+    <button onclick="logoutUser()">Logout</button><br><br>
 
-        <input type="text" id="title" placeholder="enter a task" />
-        <button onclick="addTask()">Add</button>
+    <input type="text" id="title" placeholder="Enter a task" />
+    <button onclick="addNewTask()">Add</button>
 
-        <h3>My tasks</h3>
-        <table id="task-list"></table>
+    <h3>My tasks</h3>
+    <table id="taskList"></table>
 
     <script>
-        // load tasks
         async function loadTasks() {
-            let res = await fetch("api.php");
-            // json() - decode, stringify() - encode
-            let data = await res.json();
+            const taskList = document.getElementById("taskList");
+            taskList.innerHTML = "";
+            const tasks = await getTasks();
 
-            if (!data.success) {
-                window.location.assign('login_form.php');
+            if (tasks.length === 0) {
+                taskList.innerHTML = "<p>no task yet</p>"
+                return;
             }
 
-            let list = document.getElementById("task-list");
-            list.innerHTML = "";
-            data.tasks.forEach(task => {
-                let tr = document.createElement("tr");
+            tasks.data.forEach(task => {
+                const tr = document.createElement("tr");
                 tr.innerHTML = `
                         <td>
                             <input type="checkbox"
-                                onchange="toggleTask(${task.id}, this.checked)"
+                                onchange="(el => (async () => { await toggleTask(${task.id}, el.checked); loadTasks(); })())(this)"
                                 ${task.status ? "checked" : ""} />
                             <label class="${task.status ? 'text-decoration-line-through text-muted' : ''}">${task.title}</label>
                         </td>
                         <td>
-                            <button onclick="deleteTask(${task.id})">Delete</button>
+                            <button onclick="(async () => { await deleteTask(${task.id}); loadTasks(); })()">Delete</button>
                         </td>
                     `;
-                list.appendChild(tr);
+                taskList.appendChild(tr);
             });
         }
 
-        // add task
-        async function addTask() {
-            let title = document.getElementById("title").value;
+        // add new task
+        async function addNewTask() {
+            const title = document.getElementById("title").value;
 
-            let res = await fetch("api.php", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    title
-                })
-            })
-            let data = await res.json();
-
-            if (data.success) {
-                document.getElementById("title").value = "";
+            if (!title) {
+                alert("title is required");
+                return;
             }
 
-            alert(data.message);
+            await addTask(title);
+            document.getElementById("title").value = "";
             loadTasks();
         }
 
-        // update task
-        async function toggleTask(id, status) {
-            let res = await fetch("api.php", {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    id,
-                    status
-                })
-            });
-            let data = await res.json();
-            alert(data.message);
-            loadTasks();
-        }
-
-        // delete task
-        async function deleteTask(id) {
-            let res = await fetch("api.php", {
-                method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    id
-                })
-            });
-            let data = await res.json();
-            alert(data.message);
-            loadTasks();
+        // logout
+        async function logoutUser() {
+            await logout();
+            window.location.href = "login_form.php";
         }
 
         // on initial load for tasks list
-        loadTasks();
+        document.addEventListener("DOMContentLoaded", loadTasks);
     </script>
 </body>
 

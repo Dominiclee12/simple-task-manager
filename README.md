@@ -2,7 +2,7 @@ Project Name:
 Task Manager (PHP + MySQL)
 
 Intro:
-Simple task management system, including login/registration, task CRUD with API.
+Simple task management system, including login/registration (session), task CRUD with API.
 
 Tech Stack:
 -PHP
