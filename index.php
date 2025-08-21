@@ -2,24 +2,19 @@
 <html lang="en">
 
 <head>
-    <link href="./bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <title>Simple Task Manager</title>
 </head>
 
 <body>
-    <div class="container">
-        <h2>Simple Task Manager (API)</h2>
-        <a href="logout.php">Logout</a>
+        <h2>Simple Task Manager</h2>
+        <a href="logout.php">Logout</a><br><br>
 
-        <h3>Add new task</h3>
-        <input type="text" id="title" placeholder="study php" required />
-        <button type="button" onclick="AddTask()">Add</button>
+        <input type="text" id="title" placeholder="enter a task" />
+        <button onclick="addTask()">Add</button>
 
         <h3>My tasks</h3>
-        <ul id="task-list"></ul>
-    </div>
+        <table id="task-list"></table>
 
-    <script src="./bootstrap/js/bootstrap.bundle.min.js"></script>
     <script>
         // load tasks
         async function loadTasks() {
@@ -27,24 +22,31 @@
             // json() - decode, stringify() - encode
             let data = await res.json();
 
-            if (data.success) {
-                let list = document.getElementById("task-list");
-                list.innerHTML = "";
-                data.tasks.forEach(task => {
-                    let li = document.createElement("li");
-                    li.innerHTML = `
-                        <b>${task.title}</b> |
-                        ${task.status} |
-                        <button onclick="UpdateTask(${task.id}, 'done')">done</button> |
-                        <button onclick="DeleteTask(${task.id})">delete</button>
-                    `;
-                    list.appendChild(li);
-                });
+            if (!data.success) {
+                window.location.assign('login_form.php');
             }
+
+            let list = document.getElementById("task-list");
+            list.innerHTML = "";
+            data.tasks.forEach(task => {
+                let tr = document.createElement("tr");
+                tr.innerHTML = `
+                        <td>
+                            <input type="checkbox"
+                                onchange="toggleTask(${task.id}, this.checked)"
+                                ${task.status ? "checked" : ""} />
+                            <label class="${task.status ? 'text-decoration-line-through text-muted' : ''}">${task.title}</label>
+                        </td>
+                        <td>
+                            <button onclick="deleteTask(${task.id})">Delete</button>
+                        </td>
+                    `;
+                list.appendChild(tr);
+            });
         }
 
         // add task
-        async function AddTask() {
+        async function addTask() {
             let title = document.getElementById("title").value;
 
             let res = await fetch("api.php", {
@@ -67,7 +69,7 @@
         }
 
         // update task
-        async function UpdateTask(id, status) {
+        async function toggleTask(id, status) {
             let res = await fetch("api.php", {
                 method: "PUT",
                 headers: {
@@ -84,7 +86,7 @@
         }
 
         // delete task
-        async function DeleteTask(id) {
+        async function deleteTask(id) {
             let res = await fetch("api.php", {
                 method: "DELETE",
                 headers: {

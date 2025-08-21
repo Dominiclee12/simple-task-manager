@@ -15,7 +15,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 switch ($method) {
     // retrieve tasks
     case "GET":
-        $stmt = $conn->prepare("SELECT id, title, status FROM tasks WHERE user_id=? ORDER BY created_at DESC");
+        $stmt = $conn->prepare("SELECT id, title, status FROM tasks WHERE user_id=? ORDER BY status ASC, created_at DESC");
         $stmt->bind_param("i", $user_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -44,7 +44,7 @@ switch ($method) {
     case "PUT":
         $data = json_decode(file_get_contents("php://input"), true);
         $task_id = $data['id'] ?? 0;
-        $status = $data['status'] ?? 'todo';
+        $status = $data['status'];
 
         $stmt = $conn->prepare("UPDATE tasks SET status=? WHERE id=? AND user_id=?");
         $stmt->bind_param("sii", $status, $task_id, $user_id);
@@ -57,7 +57,7 @@ switch ($method) {
         $data = json_decode(file_get_contents("php://input"), true);
         $task_id = $data['id'] ?? 0;
 
-        $stmt = $conn->prepare("DELETE tasks WHERE id=? AND user_id=?");
+        $stmt = $conn->prepare("DELETE FROM tasks WHERE id=? AND user_id=?");
         $stmt->bind_param("ii", $task_id, $user_id);
         $stmt->execute();
         echo json_encode(["success" => true, "message" => "Task deleted"]);
