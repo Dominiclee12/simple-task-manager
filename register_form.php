@@ -31,8 +31,12 @@
             });
             let data = await res.json();
 
-            console.log("message", data.message);
             alert(data.message);
+            console.log(data.success);
+            
+            if (data.success) {
+                window.location.assign("login_form.php");
+            }
         }
     </script>
 </body>
