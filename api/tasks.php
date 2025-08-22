@@ -16,18 +16,15 @@ $method = $_SERVER['REQUEST_METHOD'];
 switch ($method) {
     case "GET":
         // retrieve tasks
-        $stmt = $conn->prepare("SELECT id, title, status FROM tasks WHERE user_id=? ORDER BY status ASC, created_at DESC");
-        $stmt->bind_param("i", $user_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $tasks = $result->fetch_all(MYSQLI_ASSOC);
-
+        $stmt = $pdo->prepare("SELECT id, title, status FROM tasks WHERE user_id=? ORDER BY status ASC, created_at DESC");
+        $stmt->execute([$user_id]);
+        $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
         echo json_encode(["success" => true, "data" => $tasks]);
         break;
 
     case "POST":
         // create task
-        $data = json_decode(file_get_contents("php://input"), true); // read raw HTTP request body and decode them into associative array for PHP
+        $data = json_decode(file_get_contents("php://input"), true); // read raw HTTP request body and convert into assoc array (PHP)
         $title = $data['title'];
 
         if (empty($title)) {
@@ -36,9 +33,8 @@ switch ($method) {
             exit;
         }
 
-        $stmt = $conn->prepare("INSERT INTO tasks (user_id, title) VALUES (?, ?)");
-        $stmt->bind_param("is", $user_id, $title);
-        $stmt->execute();
+        $stmt = $pdo->prepare("INSERT INTO tasks (user_id, title) VALUES (?, ?)");
+        $stmt->execute([$user_id, $title]);
 
         echo json_encode(["success" => true, "message" => "task added"]);
         break;
@@ -49,9 +45,8 @@ switch ($method) {
         $task_id = $data['id'] ?? 0;
         $status = $data['status'];
 
-        $stmt = $conn->prepare("UPDATE tasks SET status=? WHERE id=? AND user_id=?");
-        $stmt->bind_param("sii", $status, $task_id, $user_id);
-        $stmt->execute();
+        $stmt = $pdo->prepare("UPDATE tasks SET status=? WHERE id=? AND user_id=?");
+        $stmt->execute([$status, $task_id, $user_id]);
 
         echo json_encode(["success" => true, "message" => "task updated"]);
         break;
@@ -61,9 +56,8 @@ switch ($method) {
         $data = json_decode(file_get_contents("php://input"), true);
         $task_id = $data['id'] ?? 0;
 
-        $stmt = $conn->prepare("DELETE FROM tasks WHERE id=? AND user_id=?");
-        $stmt->bind_param("ii", $task_id, $user_id);
-        $stmt->execute();
+        $stmt = $pdo->prepare("DELETE FROM tasks WHERE id=? AND user_id=?");
+        $stmt->execute([$task_id, $user_id]);
 
         echo json_encode(["success" => true, "message" => "task deleted"]);
         break;

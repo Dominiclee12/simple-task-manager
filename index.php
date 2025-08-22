@@ -27,21 +27,22 @@ if (!isset($_SESSION['user_id'])) {
         async function loadTasks() {
             const taskList = document.getElementById("taskList");
             taskList.innerHTML = "";
-            const tasks = await getTasks();
+            const res = await getTasks();
+            const tasks = res.data;
 
             if (tasks.length === 0) {
-                taskList.innerHTML = "<p>no task yet</p>"
+                taskList.innerHTML = "<p>no task yet</p>";
                 return;
             }
 
-            tasks.data.forEach(task => {
+            tasks.forEach(task => {
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
                         <td>
                             <input type="checkbox"
                                 onchange="(el => (async () => { await toggleTask(${task.id}, el.checked); loadTasks(); })())(this)"
-                                ${task.status ? "checked" : ""} />
-                            <label class="${task.status ? 'text-decoration-line-through text-muted' : ''}">${task.title}</label>
+                                ${task.status == 1 ? "checked" : ""} />
+                            <label class="${task.status == 1 ? 'text-decoration-line-through text-muted' : ''}">${task.title}</label>
                         </td>
                         <td>
                             <button onclick="(async () => { await deleteTask(${task.id}); loadTasks(); })()">Delete</button>
